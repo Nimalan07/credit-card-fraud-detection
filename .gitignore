@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# MLOps artifacts
+mlruns/
+.mlflow/
+data/raw/
+data/processed/
+data/validation/
+models/*.pkl
+*.log
+
+# IDEs
+.vscode/
+.idea/

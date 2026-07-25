@@ -1,0 +1,31 @@
+{
+    "drift_detected": true,
+    "overall_drift_score": 0.21893990549107226,
+    "feature_drift": {
+        "Amount": {
+            "ks_statistic": 0.08433765262830473,
+            "p_value": 4.794776697753305e-63,
+            "drift_detected": true
+        },
+        "Time": {
+            "ks_statistic": 0.10069611469181394,
+            "p_value": 9.50350957525784e-90,
+            "drift_detected": true
+        },
+        "V1": {
+            "ks_statistic": 0.23102059840274183,
+            "p_value": 0.0,
+            "drift_detected": true
+        },
+        "V2": {
+            "ks_statistic": 0.32774165986695947,
+            "p_value": 0.0,
+            "drift_detected": true
+        },
+        "V3": {
+            "ks_statistic": 0.3509035018655413,
+            "p_value": 0.0,
+            "drift_detected": true
+        }
+    }
+}

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinGuard AI - Real-Time MLOps Fraud Detection Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="glass-bg"></div>
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand">
+                <i class="fa-solid fa-shield-halved brand-logo"></i>
+                <div>
+                    <h1>FinGuard AI</h1>
+                    <p class="subtitle">Real-Time Credit Card Fraud Detection Pipeline</p>
+                </div>
+            </div>
+            <div class="system-status-badge">
+                <span class="status-indicator online"></span>
+                <span id="system-status-text">SYSTEM STANDBY</span>
+                <span class="divider">|</span>
+                <span class="model-badge" id="model-badge-version">MODEL: NONE</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Panel: Analytics & Telemetry -->
+            <section class="left-panel">
+                
+                <!-- KPI Section -->
+                <div class="kpi-row">
+                    <div class="kpi-card" id="kpi-accuracy">
+                        <div class="kpi-header">
+                            <span>MODEL ACCURACY</span>
+                            <i class="fa-solid fa-gauge-high kpi-icon"></i>
+                        </div>
+                        <div class="kpi-value" id="val-accuracy">--</div>
+                        <div class="kpi-footer">Based on test partition</div>
+                    </div>
+                    <div class="kpi-card" id="kpi-f1">
+                        <div class="kpi-header">
+                            <span>CHAMPION F1-SCORE</span>
+                            <i class="fa-solid fa-bullseye kpi-icon"></i>
+                        </div>
+                        <div class="kpi-value" id="val-f1">--</div>
+                        <div class="kpi-footer" id="val-model-name">None Registered</div>
+                    </div>
+                    <div class="kpi-card" id="kpi-fraud-count">
+                        <div class="kpi-header">
+                            <span>FRAUD DETECTED</span>
+                            <i class="fa-solid fa-triangle-exclamation kpi-icon text-red"></i>
+                        </div>
+                        <div class="kpi-value text-red" id="val-fraud-count">0</div>
+                        <div class="kpi-footer">Active session detections</div>
+                    </div>
+                </div>
+
+                <!-- Charts Card -->
+                <div class="glass-card chart-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-chart-simple header-icon"></i> Model Performance Benchmarks</h2>
+                        <span class="card-tag">MLflow Logged</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="modelComparisonChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Feature Importance & Validation Diagnostics -->
+                <div class="diagnostic-row">
+                    <div class="glass-card diagnostic-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-microchip header-icon"></i> Drift & Pipeline Health</h3>
+                        </div>
+                        <div class="health-list">
+                            <div class="health-item">
+                                <span class="health-label">Data Ingestion (DVC)</span>
+                                <span class="health-status pass" id="status-ingestion"><i class="fa-solid fa-circle-check"></i> Connected</span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">Dataset Schema Check</span>
+                                <span class="health-status pass" id="status-validation"><i class="fa-solid fa-circle-check"></i> Passed</span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">SMOTE Balancing</span>
+                                <span class="health-status pass" id="status-smote"><i class="fa-solid fa-circle-check"></i> Applied</span>
+                            </div>
+                            <div class="health-item">
+                                <span class="health-label">Data Drift Status (Evidently)</span>
+                                <span class="health-status pass" id="status-drift"><i class="fa-solid fa-circle-check"></i> No Drift</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card diagnostic-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-list-check header-icon"></i> Active Hyperparameters</h3>
+                        </div>
+                        <div class="hyperparams-list" id="hyperparams-container">
+                            <p class="placeholder-text">Run training pipeline to view model parameters.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Inference Sandbox -->
+            <section class="right-panel">
+                
+                <!-- Single Transaction Predictor -->
+                <div class="glass-card sandbox-card">
+                    <div class="card-header justify-between">
+                        <h2><i class="fa-solid fa-credit-card header-icon"></i> Live Transaction Sandbox</h2>
+                        <div class="preset-selector">
+                            <label for="preset-select">Preset:</label>
+                            <select id="preset-select">
+                                <option value="" disabled selected>Select Demo Data</option>
+                                <option value="genuine">Genuine Transaction Preset</option>
+                                <option value="fraud">Fraudulent Transaction Preset</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <form id="single-predict-form" class="predict-form">
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="Time">Time (Seconds)</label>
+                                <input type="number" id="Time" name="Time" value="0" step="any" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="Amount">Amount ($)</label>
+                                <input type="number" id="Amount" name="Amount" value="100" step="any" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="V1">V1 (PCA)</label>
+                                <input type="number" id="V1" name="V1" value="0.0" step="any" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="V2">V2 (PCA)</label>
+                                <input type="number" id="V2" name="V2" value="0.0" step="any" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="V3">V3 (PCA)</label>
+                                <input type="number" id="V3" name="V3" value="0.0" step="any" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="V4">V4 (PCA)</label>
+                                <input type="number" id="V4" name="V4" value="0.0" step="any" required>
+                            </div>
+                            <!-- Collapsible V5-V28 block -->
+                            <details class="v-features-details">
+                                <summary>Show remaining PCA features (V5 to V28)</summary>
+                                <div class="form-grid nested-grid">
+                                    <div class="input-group"><label>V5</label><input type="number" id="V5" name="V5" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V6</label><input type="number" id="V6" name="V6" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V7</label><input type="number" id="V7" name="V7" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V8</label><input type="number" id="V8" name="V8" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V9</label><input type="number" id="V9" name="V9" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V10</label><input type="number" id="V10" name="V10" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V11</label><input type="number" id="V11" name="V11" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V12</label><input type="number" id="V12" name="V12" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V13</label><input type="number" id="V13" name="V13" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V14</label><input type="number" id="V14" name="V14" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V15</label><input type="number" id="V15" name="V15" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V16</label><input type="number" id="V16" name="V16" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V17</label><input type="number" id="V17" name="V17" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V18</label><input type="number" id="V18" name="V18" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V19</label><input type="number" id="V19" name="V19" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V20</label><input type="number" id="V20" name="V20" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V21</label><input type="number" id="V21" name="V21" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V22</label><input type="number" id="V22" name="V22" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V23</label><input type="number" id="V23" name="V23" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V24</label><input type="number" id="V24" name="V24" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V25</label><input type="number" id="V25" name="V25" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V26</label><input type="number" id="V26" name="V26" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V27</label><input type="number" id="V27" name="V27" value="0.0" step="any"></div>
+                                    <div class="input-group"><label>V28</label><input type="number" id="V28" name="V28" value="0.0" step="any"></div>
+                                </div>
+                            </details>
+                        </div>
+                        <button type="submit" class="glow-button primary" id="predict-btn">
+                            <i class="fa-solid fa-bolt"></i> RUN TRANSACTION CHECK
+                        </button>
+                    </form>
+
+                    <!-- Prediction Result Alert -->
+                    <div class="result-box hidden" id="prediction-result-box">
+                        <div class="result-icon-container" id="res-icon-container">
+                            <i class="fa-solid fa-circle-check" id="res-icon"></i>
+                        </div>
+                        <div class="result-details">
+                            <h4 id="res-label">GENUINE TRANSACTION</h4>
+                            <p class="res-probability">Fraud probability: <span id="res-probability-value">0.02%</span></p>
+                            <p class="res-verdict" id="res-verdict-text">The system has flagged this transaction as low risk.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batch CSV Predictor -->
+                <div class="glass-card sandbox-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-file-csv header-icon"></i> Batch Inference Sandbox</h2>
+                    </div>
+                    <div class="csv-upload-area" id="drop-zone">
+                        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                        <p>Drag and drop a <code>creditcard.csv</code> sample here or click to browse</p>
+                        <input type="file" id="csv-file-input" accept=".csv" class="hidden">
+                    </div>
+                    
+                    <!-- Batch result table -->
+                    <div class="batch-results-container hidden" id="batch-results-card">
+                        <div class="batch-results-header">
+                            <span id="batch-stats">Processed 0 records (0 fraud flagged)</span>
+                            <button class="glow-button secondary xs" id="clear-batch-btn">Clear</button>
+                        </div>
+                        <div class="table-scroll-container">
+                            <table class="batch-table" id="batch-table">
+                                <thead>
+                                    <tr>
+                                        <th>Row</th>
+                                        <th>Probability</th>
+                                        <th>Verdict</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batch-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="app-footer-bar">
+            <p>&copy; 2026 FinGuard AI Pipeline. Engineered with FastAPI, DVC, MLflow, and Docker.</p>
+            <p>Phase II Prototype - MLOps Automated Detection</p>
+        </footer>
+    </div>
+    
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

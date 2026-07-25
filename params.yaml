@@ -1,0 +1,25 @@
+# FinGuard AI pipeline parameters
+ingestion:
+  sample_fraction: 0.2
+  test_size: 0.2
+  random_state: 42
+
+preprocessing:
+  scaling:
+    time: StandardScaler
+    amount: RobustScaler
+  smote:
+    random_state: 42
+
+models:
+  logistic_regression:
+    C: 0.01
+    max_iter: 1000
+    solver: lbfgs
+  random_forest:
+    n_estimators: 50
+    max_depth: 10
+  xgboost:
+    n_estimators: 50
+    max_depth: 6
+    learning_rate: 0.1
