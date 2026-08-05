@@ -379,9 +379,20 @@ body {
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.input-group input {
+.help-text {
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    font-style: italic;
+    opacity: 0.85;
+}
+
+.input-group input, .input-group select {
     background: rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
@@ -392,7 +403,7 @@ body {
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.input-group input:focus {
+.input-group input:focus, .input-group select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 8px var(--primary-glow);
 }
