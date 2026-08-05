@@ -309,9 +309,21 @@ document.addEventListener("DOMContentLoaded", () => {
             batchResultsCard.classList.remove("hidden");
             batchStats.innerText = `Processed ${data.total_processed} records (${data.fraud_detected} fraud flagged)`;
             
-            // Populate table
+            // Populate table (limit to first 100 rows to prevent browser hang/crash on huge datasets)
             batchTableBody.innerHTML = "";
+            
+            // Count total fraud across entire dataset
             data.predictions.forEach(p => {
+                if (p.is_fraud === 1) {
+                    fraudSessionCount++;
+                }
+            });
+            
+            // Limit displayed rows in the UI
+            const displayLimit = 100;
+            const itemsToDisplay = data.predictions.slice(0, displayLimit);
+            
+            itemsToDisplay.forEach(p => {
                 const row = document.createElement("tr");
                 const badgeClass = p.is_fraud === 1 ? "badge danger" : "badge safe";
                 
@@ -321,11 +333,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td><span class="${badgeClass}">${p.label}</span></td>
                 `;
                 batchTableBody.appendChild(row);
-                
-                if (p.is_fraud === 1) {
-                    fraudSessionCount++;
-                }
             });
+            
+            if (data.predictions.length > displayLimit) {
+                const infoRow = document.createElement("tr");
+                infoRow.innerHTML = `
+                    <td colspan="3" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 10px 0;">
+                        Showing first ${displayLimit} of ${data.predictions.length} rows to optimize UI rendering.
+                    </td>
+                `;
+                batchTableBody.appendChild(infoRow);
+            }
             
             valFraudCount.innerText = fraudSessionCount;
             if (fraudSessionCount > 0) {
