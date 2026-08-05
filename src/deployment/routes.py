@@ -74,10 +74,22 @@ async def predict_csv(file: UploadFile = File(...)):
         # Predict on batch
         df_pred = predictor.predict_batch(df)
         
-        predictions_list = []
-        fraud_count_batch = 0
+        # Calculate total fraud count using vectorized sum
+        fraud_count_batch = int(df_pred["is_fraud"].sum())
         
-        for idx, row in df_pred.iterrows():
+        # Update Prometheus metrics in batch
+        total_records = len(df_pred)
+        genuine_records = total_records - fraud_count_batch
+        PREDICTION_COUNT.labels(status="fraud").inc(fraud_count_batch)
+        PREDICTION_COUNT.labels(status="genuine").inc(genuine_records)
+        if fraud_count_batch > 0:
+            FRAUD_COUNT.inc(fraud_count_batch)
+            
+        # Build preview items for the first 1000 rows to optimize payload size
+        predictions_list = []
+        df_preview = df_pred.head(1000)
+        
+        for idx, row in df_preview.iterrows():
             is_f = int(row["is_fraud"])
             prob = float(row["probability"])
             label = "Fraudulent" if is_f == 1 else "Genuine"
@@ -90,13 +102,6 @@ async def predict_csv(file: UploadFile = File(...)):
                     probability=prob
                 )
             )
-            
-            # Prometheus status counts
-            status = "fraud" if is_f == 1 else "genuine"
-            PREDICTION_COUNT.labels(status=status).inc()
-            if is_f == 1:
-                FRAUD_COUNT.inc()
-                fraud_count_batch += 1
                 
         latency = time.time() - start_time
         REQUEST_LATENCY.labels(endpoint="/predict_csv").observe(latency)
