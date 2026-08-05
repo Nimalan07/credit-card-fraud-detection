@@ -16,12 +16,14 @@ class FraudPredictor:
             cls._instance = super(FraudPredictor, cls).__new__(cls)
             cls._instance.model = None
             cls._instance.scaler = None
-            cls._instance.model_version = "v1.0"
-            cls._instance.load_model_and_scaler()
+            cls._instance.encoder = None
+            cls._instance.model_version = "v2.0"
+            cls._instance.load_model_scaler_encoder()
         return cls._instance
 
-    def load_model_and_scaler(self):
+    def load_model_scaler_encoder(self):
         scaler_path = PROCESSED_DATA_DIR / "scaler.pkl"
+        encoder_path = PROCESSED_DATA_DIR / "encoder.pkl"
         
         # Load Best Model
         if BEST_MODEL_PATH.exists():
@@ -43,27 +45,42 @@ class FraudPredictor:
         else:
             logger.warning(f"Scaler not found at {scaler_path}!")
 
+        # Load Encoder
+        if encoder_path.exists():
+            try:
+                self.encoder = joblib.load(encoder_path)
+                logger.info(f"Loaded feature encoder from {encoder_path}")
+            except Exception as e:
+                logger.error(f"Error loading encoder: {str(e)}")
+        else:
+            logger.warning(f"Encoder not found at {encoder_path}!")
+
     def is_ready(self) -> bool:
-        return self.model is not None and self.scaler is not None
+        return self.model is not None and self.scaler is not None and self.encoder is not None
 
     def predict_single(self, transaction: dict) -> tuple[int, float]:
         if not self.is_ready():
-            raise RuntimeError("Model or Scaler not loaded. Pipeline must be run first.")
+            raise RuntimeError("Inference artifacts not fully loaded. Run the training pipeline first.")
             
         df = pd.DataFrame([transaction])
         
         # 1. Feature Engineering
         df_feat = engineer_features(df)
         
-        # 2. Scaling (Time and Amount)
-        df_scaled = self.scaler.transform(df_feat)
+        # 2. Categorical Encoding
+        df_encoded = self.encoder.transform(df_feat)
         
-        # 3. Align column order with training features
-        # Training feature columns order: Time, V1-V28, Amount, HourOfDay, LogAmount
-        expected_cols = ["Time"] + [f"V{i}" for i in range(1, 29)] + ["Amount", "HourOfDay", "LogAmount"]
+        # 3. Scaling (TransactionDT and TransactionAmt)
+        df_scaled = self.scaler.transform(df_encoded)
+        
+        # 4. Align column order with training features
+        expected_cols = [
+            "TransactionAmt", "TransactionDT", "ProductCD", "card1", "card2", "card3", "card4", "card5", "card6",
+            "addr1", "addr2", "P_emaildomain", "R_emaildomain", "DeviceType", "DeviceInfo", "HourOfDay", "LogAmount"
+        ]
         df_final = df_scaled[expected_cols]
         
-        # 4. Predict
+        # 5. Predict
         is_fraud = int(self.model.predict(df_final)[0])
         prob = float(self.model.predict_proba(df_final)[0][1])
         
@@ -71,13 +88,15 @@ class FraudPredictor:
 
     def predict_batch(self, df_batch: pd.DataFrame) -> pd.DataFrame:
         if not self.is_ready():
-            raise RuntimeError("Model or Scaler not loaded. Pipeline must be run first.")
+            raise RuntimeError("Inference artifacts not fully loaded. Run the training pipeline first.")
             
-        # Keep copy
         df = df_batch.copy()
         
-        # Ensure all columns exist
-        expected_raw_cols = ["Time", "Amount"] + [f"V{i}" for i in range(1, 29)]
+        # Ensure all columns exist (except targets/keys like isFraud and TransactionID)
+        expected_raw_cols = [
+            "TransactionAmt", "TransactionDT", "ProductCD", "card1", "card2", "card3", "card4", "card5", "card6",
+            "addr1", "addr2", "P_emaildomain", "R_emaildomain", "DeviceType", "DeviceInfo"
+        ]
         missing = [col for col in expected_raw_cols if col not in df.columns]
         if missing:
             raise ValueError(f"Batch dataset missing columns: {missing}")
@@ -85,14 +104,20 @@ class FraudPredictor:
         # 1. Feature Engineering
         df_feat = engineer_features(df)
         
-        # 2. Scaling
-        df_scaled = self.scaler.transform(df_feat)
+        # 2. Categorical Encoding
+        df_encoded = self.encoder.transform(df_feat)
         
-        # 3. Align columns
-        expected_cols = ["Time"] + [f"V{i}" for i in range(1, 29)] + ["Amount", "HourOfDay", "LogAmount"]
+        # 3. Scaling
+        df_scaled = self.scaler.transform(df_encoded)
+        
+        # 4. Align columns
+        expected_cols = [
+            "TransactionAmt", "TransactionDT", "ProductCD", "card1", "card2", "card3", "card4", "card5", "card6",
+            "addr1", "addr2", "P_emaildomain", "R_emaildomain", "DeviceType", "DeviceInfo", "HourOfDay", "LogAmount"
+        ]
         df_final = df_scaled[expected_cols]
         
-        # 4. Predict
+        # 5. Predict
         df["is_fraud"] = self.model.predict(df_final).astype(int)
         df["probability"] = self.model.predict_proba(df_final)[:, 1].astype(float)
         

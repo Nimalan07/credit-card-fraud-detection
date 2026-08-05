@@ -13,9 +13,11 @@ ENV/
 # MLOps artifacts
 mlruns/
 .mlflow/
+mlflow.db
 data/raw/
 data/processed/
 data/validation/
+data/archive/
 models/*.pkl
 *.log
 

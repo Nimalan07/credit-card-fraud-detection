@@ -19,7 +19,7 @@ def detect_drift() -> float:
         df_baseline = pd.read_csv(PROCESSED_TRAIN_X)
         df_current = pd.read_csv(PROCESSED_TEST_X)
         
-        drift_features = ["Amount", "Time", "V1", "V2", "V3"]
+        drift_features = ["TransactionAmt", "TransactionDT", "card1", "card2", "addr1"]
         drift_scores = {}
         drift_detected = False
         
@@ -27,7 +27,7 @@ def detect_drift() -> float:
         for col in drift_features:
             if col in df_baseline.columns and col in df_current.columns:
                 stat, p_val = ks_2samp(df_baseline[col], df_current[col])
-                # standard threshold: p-value < 0.05 indicates different distributions (drift)
+                # Standard threshold: p-value < 0.05 indicates different distributions (drift)
                 drifted = p_val < 0.05
                 drift_scores[col] = {
                     "ks_statistic": float(stat),
@@ -38,7 +38,7 @@ def detect_drift() -> float:
                     drift_detected = True
                     
         # Average KS statistic as overall drift score
-        overall_score = float(sum(d["ks_statistic"] for d in drift_scores.values()) / len(drift_scores))
+        overall_score = float(sum(d["ks_statistic"] for d in drift_scores.values()) / len(drift_scores)) if drift_scores else 0.0
         
         report = {
             "drift_detected": drift_detected,

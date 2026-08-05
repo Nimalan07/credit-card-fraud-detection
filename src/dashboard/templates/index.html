@@ -24,7 +24,7 @@
                 <i class="fa-solid fa-shield-halved brand-logo"></i>
                 <div>
                     <h1>FinGuard AI</h1>
-                    <p class="subtitle">Real-Time Credit Card Fraud Detection Pipeline</p>
+                    <p class="subtitle">IEEE-CIS Fraud Detection & MLOps Pipeline</p>
                 </div>
             </div>
             <div class="system-status-badge">
@@ -100,7 +100,7 @@
                                 <span class="health-status pass" id="status-smote"><i class="fa-solid fa-circle-check"></i> Applied</span>
                             </div>
                             <div class="health-item">
-                                <span class="health-label">Data Drift Status (Evidently)</span>
+                                <span class="health-label">Data Drift Status (KS-Test)</span>
                                 <span class="health-status pass" id="status-drift"><i class="fa-solid fa-circle-check"></i> No Drift</span>
                             </div>
                         </div>
@@ -136,61 +136,93 @@
                     
                     <form id="single-predict-form" class="predict-form">
                         <div class="form-grid">
+                            <!-- Section 1: Transaction details -->
                             <div class="input-group">
-                                <label for="Time">Time (Seconds)</label>
-                                <input type="number" id="Time" name="Time" value="0" step="any" required>
+                                <label for="TransactionAmt">Transaction Amt ($)</label>
+                                <input type="number" id="TransactionAmt" name="TransactionAmt" value="59.00" step="any" required>
                             </div>
                             <div class="input-group">
-                                <label for="Amount">Amount ($)</label>
-                                <input type="number" id="Amount" name="Amount" value="100" step="any" required>
+                                <label for="TransactionDT">Time Delta (Seconds)</label>
+                                <input type="number" id="TransactionDT" name="TransactionDT" value="86400" step="any" required>
                             </div>
                             <div class="input-group">
-                                <label for="V1">V1 (PCA)</label>
-                                <input type="number" id="V1" name="V1" value="0.0" step="any" required>
+                                <label for="ProductCD">Product Code</label>
+                                <select id="ProductCD" name="ProductCD" required>
+                                    <option value="W" selected>W (Web)</option>
+                                    <option value="H">H (Home)</option>
+                                    <option value="C">C (Credit)</option>
+                                    <option value="S">S (Store)</option>
+                                    <option value="R">R (Realtime)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Section 2: Card details -->
+                            <div class="input-group">
+                                <label for="card1">Card 1 (Issuer ID)</label>
+                                <input type="number" id="card1" name="card1" value="13926" required>
                             </div>
                             <div class="input-group">
-                                <label for="V2">V2 (PCA)</label>
-                                <input type="number" id="V2" name="V2" value="0.0" step="any" required>
+                                <label for="card2">Card 2</label>
+                                <input type="number" id="card2" name="card2" value="327">
                             </div>
                             <div class="input-group">
-                                <label for="V3">V3 (PCA)</label>
-                                <input type="number" id="V3" name="V3" value="0.0" step="any" required>
+                                <label for="card3">Card 3</label>
+                                <input type="number" id="card3" name="card3" value="150">
                             </div>
                             <div class="input-group">
-                                <label for="V4">V4 (PCA)</label>
-                                <input type="number" id="V4" name="V4" value="0.0" step="any" required>
+                                <label for="card4">Card 4 (Brand)</label>
+                                <select id="card4" name="card4" required>
+                                    <option value="visa">Visa</option>
+                                    <option value="mastercard">Mastercard</option>
+                                    <option value="discover" selected>Discover</option>
+                                    <option value="american express">Amex</option>
+                                    <option value="unknown">Unknown</option>
+                                </select>
                             </div>
-                            <!-- Collapsible V5-V28 block -->
-                            <details class="v-features-details">
-                                <summary>Show remaining PCA features (V5 to V28)</summary>
-                                <div class="form-grid nested-grid">
-                                    <div class="input-group"><label>V5</label><input type="number" id="V5" name="V5" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V6</label><input type="number" id="V6" name="V6" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V7</label><input type="number" id="V7" name="V7" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V8</label><input type="number" id="V8" name="V8" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V9</label><input type="number" id="V9" name="V9" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V10</label><input type="number" id="V10" name="V10" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V11</label><input type="number" id="V11" name="V11" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V12</label><input type="number" id="V12" name="V12" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V13</label><input type="number" id="V13" name="V13" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V14</label><input type="number" id="V14" name="V14" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V15</label><input type="number" id="V15" name="V15" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V16</label><input type="number" id="V16" name="V16" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V17</label><input type="number" id="V17" name="V17" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V18</label><input type="number" id="V18" name="V18" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V19</label><input type="number" id="V19" name="V19" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V20</label><input type="number" id="V20" name="V20" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V21</label><input type="number" id="V21" name="V21" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V22</label><input type="number" id="V22" name="V22" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V23</label><input type="number" id="V23" name="V23" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V24</label><input type="number" id="V24" name="V24" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V25</label><input type="number" id="V25" name="V25" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V26</label><input type="number" id="V26" name="V26" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V27</label><input type="number" id="V27" name="V27" value="0.0" step="any"></div>
-                                    <div class="input-group"><label>V28</label><input type="number" id="V28" name="V28" value="0.0" step="any"></div>
-                                </div>
-                            </details>
+                            <div class="input-group">
+                                <label for="card5">Card 5</label>
+                                <input type="number" id="card5" name="card5" value="142">
+                            </div>
+                            <div class="input-group">
+                                <label for="card6">Card 6 (Type)</label>
+                                <select id="card6" name="card6" required>
+                                    <option value="debit">Debit</option>
+                                    <option value="credit" selected>Credit</option>
+                                    <option value="unknown">Unknown</option>
+                                </select>
+                            </div>
+
+                            <!-- Section 3: Identity & Location -->
+                            <div class="input-group">
+                                <label for="addr1">Address 1 (Billing Region)</label>
+                                <input type="number" id="addr1" name="addr1" value="315">
+                            </div>
+                            <div class="input-group">
+                                <label for="addr2">Address 2 (Country Code)</label>
+                                <input type="number" id="addr2" name="addr2" value="87">
+                            </div>
+                            <div class="input-group">
+                                <label for="P_emaildomain">Purchaser Email Domain</label>
+                                <input type="text" id="P_emaildomain" name="P_emaildomain" value="gmail.com">
+                            </div>
+                            <div class="input-group">
+                                <label for="R_emaildomain">Recipient Email Domain</label>
+                                <input type="text" id="R_emaildomain" name="R_emaildomain" value="gmail.com">
+                            </div>
+                            <div class="input-group">
+                                <label for="DeviceType">Device Type</label>
+                                <select id="DeviceType" name="DeviceType">
+                                    <option value="desktop" selected>Desktop</option>
+                                    <option value="mobile">Mobile</option>
+                                    <option value="unknown">Unknown</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="DeviceInfo">Device Info</label>
+                                <input type="text" id="DeviceInfo" name="DeviceInfo" value="Windows">
+                            </div>
                         </div>
+                        
                         <button type="submit" class="glow-button primary" id="predict-btn">
                             <i class="fa-solid fa-bolt"></i> RUN TRANSACTION CHECK
                         </button>
@@ -216,7 +248,7 @@
                     </div>
                     <div class="csv-upload-area" id="drop-zone">
                         <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-                        <p>Drag and drop a <code>creditcard.csv</code> sample here or click to browse</p>
+                        <p>Drag and drop a transaction CSV sample here or click to browse</p>
                         <input type="file" id="csv-file-input" accept=".csv" class="hidden">
                     </div>
                     

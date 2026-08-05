@@ -8,26 +8,32 @@ logger = get_logger("data_validation")
 def validate_dataset() -> bool:
     logger.info("Starting dataset validation...")
     if not RAW_DATA_PATH.exists():
-        logger.error(f"Raw dataset not found at {RAW_DATA_PATH}")
+        logger.error(f"Merged dataset not found at {RAW_DATA_PATH}")
         return False
         
     try:
-        # Read dataset (just a small chunk first or the whole for check)
+        # Load dataset
         df = pd.read_csv(RAW_DATA_PATH)
-        
         num_rows, num_cols = df.shape
-        logger.info(f"Loaded dataset with {num_rows} rows and {num_cols} columns.")
+        logger.info(f"Loaded merged dataset with {num_rows} rows and {num_cols} columns.")
         
-        # 1. Column Check
-        expected_cols = ["Time", "Amount", "Class"] + [f"V{i}" for i in range(1, 29)]
-        missing_cols = [col for col in expected_cols if col not in df.columns]
+        # 1. Expected Column Check
+        expected_cols = [
+            "TransactionID", "isFraud", "TransactionAmt", "TransactionDT", "ProductCD",
+            "card1", "card2", "card3", "card4", "card5", "card6",
+            "addr1", "addr2", "P_emaildomain", "R_emaildomain", "DeviceType", "DeviceInfo"
+        ]
+        
+        # Keep track of columns present
+        available_cols = list(df.columns)
+        missing_cols = [col for col in expected_cols if col not in available_cols]
         
         # 2. Missing Value Check
         null_counts = df.isnull().sum().to_dict()
         total_nulls = sum(null_counts.values())
         
         # 3. Class Balance Check
-        class_counts = df["Class"].value_counts().to_dict()
+        class_counts = df["isFraud"].value_counts().to_dict()
         num_genuine = class_counts.get(0, 0)
         num_fraud = class_counts.get(1, 0)
         fraud_ratio = float(num_fraud / num_rows) if num_rows > 0 else 0.0
@@ -40,12 +46,9 @@ def validate_dataset() -> bool:
             validation_passed = False
             error_messages.append(f"Missing expected columns: {missing_cols}")
             
-        if total_nulls > 0:
-            logger.warning(f"Dataset contains {total_nulls} missing values.")
-            
         if num_fraud == 0:
             validation_passed = False
-            error_messages.append("Dataset does not contain any fraudulent transaction records (Class=1).")
+            error_messages.append("Dataset does not contain any fraudulent transaction records (isFraud=1).")
             
         report = {
             "validation_passed": validation_passed,
@@ -53,7 +56,7 @@ def validate_dataset() -> bool:
             "dataset_info": {
                 "num_rows": num_rows,
                 "num_columns": num_cols,
-                "columns_checked": list(df.columns)
+                "columns_checked": available_cols
             },
             "missing_values": {
                 "total_missing": total_nulls,

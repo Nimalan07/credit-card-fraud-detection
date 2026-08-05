@@ -3,26 +3,38 @@ document.addEventListener("DOMContentLoaded", () => {
     let fraudSessionCount = 0;
     const presets = {
         genuine: {
-            Time: 0,
-            Amount: 149.62,
-            V1: -1.359807, V2: -0.072781, V3: 2.536347, V4: 1.378155,
-            V5: -0.338321, V6: 0.462388, V7: 0.239599, V8: 0.098698,
-            V9: 0.363787, V10: 0.090794, V11: -0.551600, V12: -0.617801,
-            V13: -0.991390, V14: -0.311169, V15: 1.468177, V16: -0.470401,
-            V17: 0.207971, V18: 0.025791, V19: 0.403993, V20: 0.251412,
-            V21: -0.018307, V22: 0.277838, V23: -0.110474, V24: 0.066928,
-            V25: 0.128539, V26: -0.189115, V27: 0.133558, V28: -0.021053
+            TransactionAmt: 59.00,
+            TransactionDT: 86400,
+            ProductCD: "W",
+            card1: 13926,
+            card2: 327,
+            card3: 150,
+            card4: "discover",
+            card5: 142,
+            card6: "credit",
+            addr1: 315,
+            addr2: 87,
+            P_emaildomain: "gmail.com",
+            R_emaildomain: "gmail.com",
+            DeviceType: "desktop",
+            DeviceInfo: "Windows"
         },
         fraud: {
-            Time: 406,
-            Amount: 0.00,
-            V1: -3.043541, V2: -3.157307, V3: 1.088463, V4: 2.288644,
-            V5: 1.359805, V6: -1.064823, V7: 0.325574, V8: -0.067794,
-            V9: -0.270953, V10: -0.838587, V11: -0.414575, V12: -0.503141,
-            V13: 0.676502, V14: -1.692029, V15: 2.000635, V16: -1.174902,
-            V17: -2.797381, V18: -0.320803, V19: 0.380902, V20: 2.102339,
-            V21: 0.661696, V22: 0.435477, V23: 1.375966, V24: -0.293803,
-            V25: 0.279798, V26: -0.145362, V27: -0.252773, V28: 0.035764
+            TransactionAmt: 250.00,
+            TransactionDT: 90500,
+            ProductCD: "C",
+            card1: 9500,
+            card2: 321,
+            card3: 150,
+            card4: "visa",
+            card5: 226,
+            card6: "credit",
+            addr1: 299,
+            addr2: 87,
+            P_emaildomain: "anonymous.com",
+            R_emaildomain: "anonymous.com",
+            DeviceType: "mobile",
+            DeviceInfo: "iOS Device"
         }
     };
 
@@ -178,17 +190,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const formData = new FormData(singlePredictForm);
         const payload = {};
         
-        // Convert input strings to floats
-        for (const [key, value] of formData.entries()) {
-            payload[key] = parseFloat(value);
-        }
+        const categoricalFields = [
+            "ProductCD", "card4", "card6", "P_emaildomain", 
+            "R_emaildomain", "DeviceType", "DeviceInfo"
+        ];
         
-        // Make sure all V features (V1-V28) are present
-        for (let i = 1; i <= 28; i++) {
-            const vname = `V${i}`;
-            if (!(vname in payload)) {
-                const vel = document.getElementById(vname);
-                payload[vname] = vel ? parseFloat(vel.value) : 0.0;
+        // Parse numbers to floats, keep categories as strings
+        for (const [key, value] of formData.entries()) {
+            if (categoricalFields.includes(key)) {
+                payload[key] = value;
+            } else {
+                payload[key] = parseFloat(value);
             }
         }
 
@@ -314,7 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Restore drop zone
             dropZone.innerHTML = `
                 <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-                <p>Drag and drop a <code>creditcard.csv</code> sample here or click to browse</p>
+                <p>Drag and drop a transaction CSV sample here or click to browse</p>
             `;
         }
     };

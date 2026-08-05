@@ -11,18 +11,18 @@ class FeatureScaler:
         
     def fit(self, X: pd.DataFrame):
         logger.info("Fitting scalers on training features...")
-        if "Time" in X.columns:
-            self.time_scaler.fit(X[["Time"]])
-        if "Amount" in X.columns:
-            self.amount_scaler.fit(X[["Amount"]])
+        if "TransactionDT" in X.columns:
+            self.time_scaler.fit(X[["TransactionDT"]])
+        if "TransactionAmt" in X.columns:
+            self.amount_scaler.fit(X[["TransactionAmt"]])
         return self
             
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         X_scaled = X.copy()
-        if "Time" in X.columns:
-            X_scaled["Time"] = self.time_scaler.transform(X[["Time"]])
-        if "Amount" in X.columns:
-            X_scaled["Amount"] = self.amount_scaler.transform(X[["Amount"]])
+        if "TransactionDT" in X.columns:
+            X_scaled["TransactionDT"] = self.time_scaler.transform(X[["TransactionDT"]])
+        if "TransactionAmt" in X.columns:
+            X_scaled["TransactionAmt"] = self.amount_scaler.transform(X[["TransactionAmt"]])
         return X_scaled
         
     def fit_transform(self, X: pd.DataFrame) -> pd.DataFrame:

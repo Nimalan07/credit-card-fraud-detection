@@ -14,7 +14,7 @@ from src.utils.logger import get_logger
 from src.ingestion.load_data import load_dataset
 from src.ingestion.validate_data import validate_dataset
 from src.preprocessing.cleaning import clean_data
-from src.preprocessing.feature_engineering import engineer_features
+from src.preprocessing.feature_engineering import engineer_features, FeatureEncoder
 from src.preprocessing.scaling import FeatureScaler
 from src.preprocessing.smote import apply_smote
 
@@ -28,8 +28,8 @@ logger = get_logger("training_pipeline")
 def run_pipeline():
     logger.info("================== STARTING FINGUARD MLOPS PIPELINE ==================")
     
-    # Step 1: Ingestion
-    logger.info("[Step 1/7] Ingesting/checking raw dataset...")
+    # Step 1: Ingestion (Merges transaction and identity datasets)
+    logger.info("[Step 1/7] Ingesting and merging raw datasets...")
     load_dataset()
     
     # Step 2: Validation
@@ -42,29 +42,33 @@ def run_pipeline():
     logger.info("[Step 3/7] Beginning data preprocessing...")
     df = pd.read_csv(RAW_DATA_PATH)
     
-    # Optional sampling for local speed
+    # Optional sampling for local speed (stratified by target class)
     if SAMPLE_FRACTION < 1.0:
         logger.info(f"Sampling dataset: keeping {SAMPLE_FRACTION*100}% of data for faster training...")
-        # Stratify sample by class to preserve fraud ratio
-        df, _ = train_test_split(df, train_size=SAMPLE_FRACTION, stratify=df["Class"], random_state=RANDOM_STATE)
+        df, _ = train_test_split(df, train_size=SAMPLE_FRACTION, stratify=df["isFraud"], random_state=RANDOM_STATE)
         logger.info(f"Sampled dataset shape: {df.shape}")
         
     df_clean = clean_data(df)
     df_feat = engineer_features(df_clean)
     
-    # Split into features and target
-    X = df_feat.drop(columns=["Class"])
-    y = df_feat["Class"]
+    # Split into features and target (remove ID and Target from features)
+    X = df_feat.drop(columns=["isFraud", "TransactionID"])
+    y = df_feat["isFraud"]
     
     # Train-test split (stratified)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE
     )
     
-    # Scale features
+    # Fit and apply label encoder for categorical variables
+    encoder = FeatureEncoder()
+    X_train_encoded = encoder.fit_transform(X_train)
+    X_test_encoded = encoder.transform(X_test)
+    
+    # Fit and apply scaler on numerical features
     scaler = FeatureScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    X_train_scaled = scaler.fit_transform(X_train_encoded)
+    X_test_scaled = scaler.transform(X_test_encoded)
     
     # Apply SMOTE to training set only
     X_train_res, y_train_res = apply_smote(X_train_scaled, y_train)
@@ -76,10 +80,12 @@ def run_pipeline():
     X_test_scaled.to_csv(PROCESSED_TEST_X, index=False)
     y_test.to_csv(PROCESSED_TEST_Y, index=False)
     
-    # Save the scaler so the API/inference script can use it
+    # Save scaler and encoder so API and inference services can load them
     scaler_path = PROCESSED_DATA_DIR / "scaler.pkl"
+    encoder_path = PROCESSED_DATA_DIR / "encoder.pkl"
     joblib.dump(scaler, scaler_path)
-    logger.info("Preprocessed data and fit scaler saved successfully.")
+    joblib.dump(encoder, encoder_path)
+    logger.info("Preprocessed data, fit scaler, and encoder saved successfully.")
     
     # Step 4: Setup MLflow Experiment
     logger.info("[Step 4/7] Setting up MLflow experiment...")
@@ -120,7 +126,7 @@ def run_pipeline():
     best_model_name = None
     best_f1 = -1.0
     
-    # Print comparison
+    # Print comparison table
     logger.info("-" * 60)
     logger.info(f"{'Model Name':<25} | {'Accuracy':<10} | {'Precision':<10} | {'Recall':<10} | {'F1-Score':<10}")
     logger.info("-" * 60)
@@ -128,7 +134,7 @@ def run_pipeline():
         m = info["metrics"]
         logger.info(f"{name:<25} | {m['accuracy']:<10.4f} | {m['precision']:<10.4f} | {m['recall']:<10.4f} | {m['f1_score']:<10.4f}")
         
-        # Compare based on F1-score
+        # Select best model based on F1-score
         if m["f1_score"] > best_f1:
             best_f1 = m["f1_score"]
             best_model_name = name
@@ -142,7 +148,7 @@ def run_pipeline():
     joblib.dump(best_info["model"], BEST_MODEL_PATH)
     logger.info(f"Saved champion model to: {BEST_MODEL_PATH}")
     
-    # Save a run summary file
+    # Save run summary report
     summary = {
         "best_model_name": best_model_name,
         "best_f1_score": best_f1,
@@ -166,7 +172,7 @@ def run_pipeline():
     with open(PROCESSED_DATA_DIR / "run_summary.json", "w") as f:
         json.dump(summary, f, indent=4)
     
-    # Step 7: Register Best Model
+    # Step 7: Register Best Model in Registry
     logger.info("[Step 7/7] Registering champion in the MLflow Model Registry...")
     register_model_in_registry(
         run_id=best_info["run_id"],
