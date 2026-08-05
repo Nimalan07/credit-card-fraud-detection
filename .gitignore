@@ -14,12 +14,12 @@ ENV/
 mlruns/
 .mlflow/
 mlflow.db
-data/raw/
-data/processed/
-data/validation/
 data/archive/
 models/*.pkl
 *.log
+
+# Exclude large raw transaction file exceeding 100MB GitHub limit
+data/raw/train_transaction.csv
 
 # IDEs
 .vscode/

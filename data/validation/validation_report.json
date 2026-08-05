@@ -1,0 +1,54 @@
+{
+    "validation_passed": true,
+    "error_messages": [],
+    "dataset_info": {
+        "num_rows": 590540,
+        "num_columns": 17,
+        "columns_checked": [
+            "TransactionID",
+            "isFraud",
+            "TransactionAmt",
+            "TransactionDT",
+            "ProductCD",
+            "card1",
+            "card2",
+            "card3",
+            "card4",
+            "card5",
+            "card6",
+            "addr1",
+            "addr2",
+            "P_emaildomain",
+            "R_emaildomain",
+            "DeviceType",
+            "DeviceInfo"
+        ]
+    },
+    "missing_values": {
+        "total_missing": 1618626,
+        "null_counts_per_column": {
+            "TransactionID": 0,
+            "isFraud": 0,
+            "TransactionAmt": 0,
+            "TransactionDT": 0,
+            "ProductCD": 0,
+            "card1": 0,
+            "card2": 8933,
+            "card3": 1565,
+            "card4": 1577,
+            "card5": 4259,
+            "card6": 1571,
+            "addr1": 65706,
+            "addr2": 65706,
+            "P_emaildomain": 94456,
+            "R_emaildomain": 453249,
+            "DeviceType": 449730,
+            "DeviceInfo": 471874
+        }
+    },
+    "class_distribution": {
+        "genuine_count": 569877,
+        "fraud_count": 20663,
+        "fraud_percentage": 3.4990009144173126
+    }
+}
