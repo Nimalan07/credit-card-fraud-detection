@@ -197,10 +197,16 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Parse numbers to floats, keep categories as strings
         for (const [key, value] of formData.entries()) {
+            if (value === null || value === undefined || value.toString().trim() === "") {
+                continue; // Skip empty fields to let Pydantic defaults take over
+            }
             if (categoricalFields.includes(key)) {
-                payload[key] = value;
+                payload[key] = value.toString();
             } else {
-                payload[key] = parseFloat(value);
+                const parsed = parseFloat(value);
+                if (!isNaN(parsed)) {
+                    payload[key] = parsed;
+                }
             }
         }
 
@@ -213,7 +219,13 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (!res.ok) {
                 const errData = await res.json();
-                throw new Error(errData.detail || "Prediction request failed.");
+                let errMsg = "Prediction request failed.";
+                if (Array.isArray(errData.detail)) {
+                    errMsg = errData.detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join('\n');
+                } else if (typeof errData.detail === 'string') {
+                    errMsg = errData.detail;
+                }
+                throw new Error(errMsg);
             }
             
             const data = await res.json();
